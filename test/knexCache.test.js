@@ -3,14 +3,16 @@ const knexCache = require('../lib/knexCache');
 const knexMock = require('mock-knex');
 const { expect } = require('chai');
 
-knexCache(knex);
-
 describe('#knexCache', () => {
   let knexInstance;
   let tracker;
   let dbQueries;
 
-  beforeEach(() => {    
+  before(() => {
+    knexCache(knex);
+  })
+
+  beforeEach(() => {
     dbQueries = {};
 
     knexInstance = knex({
@@ -23,7 +25,7 @@ describe('#knexCache', () => {
     tracker.on('query', (query) => {
       dbQueries[query.sql] = (dbQueries[query.sql] || 0) + 1;
       query.response([
-        {id: 0, username: 'tutecaon1995', }
+        {id: 0, username: 'tutecano1995', }
       ]);
     });
   });
@@ -35,23 +37,21 @@ describe('#knexCache', () => {
 
   describe('when caching query', () => {
     beforeEach(async () => {
-      await knexInstance.select().from('users').cache('users'); // This should go to the DB
-      await knexInstance.select().from('users').cache('users'); // This should not go to the DB
+      await knexInstance.select().from('users').cache('users'); // Should execute the query
+      await knexInstance.select().from('users').cache('users'); // Should not execute the query and use cache
     });
 
-    it('should execute the query once', () => expect(dbQueries).be.equal(1));
-  });
+    it('should execute the query once', () => expect(dbQueries['select * from "users"']).be.equal(1));
 
-  describe.only('when invalidating query', () => {
-    beforeEach(async () => {
-      await knexInstance.select().from('users').cache('users'); // This should go to the DB
-      await knexInstance.select().from('users').cache('users'); // This should not go to the DB
-      await knexInstance('users').update({username: 'tutecano22'}).invalidate('users');
-      await knexInstance.select().from('users').cache('users'); // This should go to the DB
+    describe('when invalidating query', () => {
+      beforeEach(async () => {
+        await knexInstance('users').update({username: 'tutecano22'}).invalidate('users');
+        await knexInstance.select().from('users').cache('users'); // Should execute the query after invalidation
+      });
+
+      it('should execute the update', () => expect(dbQueries['update "users" set "username" = $1']).be.equal(1));
+
+      it('should execute the query after invalidation', () => expect(dbQueries['select * from "users"']).be.equal(1));
     });
-
-    it('should execute the query twice', () => expect(dbQueries['select * from \"users\"']).be.equal(2));
-
-    it('should execute the update once', () => expect(dbQueries['update "users" set "username" = $1']).be.equal(1));
   });
 })
