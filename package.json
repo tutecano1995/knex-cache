@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "test": "nyc mocha ./test/**.test.js"
+    "test": "nyc --reporter=lcov --reporter=text mocha ./test/**.test.js"
   },
   "author": "",
   "license": "ISC",
