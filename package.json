@@ -1,7 +1,8 @@
 {
-  "name": "knex-cache",
+  "name": "@tutecano1995/knex-cache",
   "version": "1.0.0",
   "description": "",
+  "main": "./lib/knexCache.js",
   "scripts": {
     "test": "nyc --reporter=lcov --reporter=text mocha ./test/**.test.js"
   },
