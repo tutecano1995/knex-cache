@@ -12,12 +12,8 @@ knex-cache is a knex extension for caching SQL queries results.
 
 ## Installation
 
-```js
-nvm use
 ```
-
-```js
-npm i
+npm i @tutecano1995/knex-cache
 ```
 
 ## Example
@@ -25,7 +21,7 @@ npm i
 
 ```js
 const knex = require('knex');
-const knexCache = require('knexCache');
+const knexCache = require('@tutecano1995/knex-cache');
 
 knexCache(knex);
 
