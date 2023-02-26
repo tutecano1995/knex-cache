@@ -1,5 +1,7 @@
 # knex-cache
 
+[![Coverage Status](https://coveralls.io/repos/github/tutecano1995/knex-cache/badge.svg?branch=docs/readme)](https://coveralls.io/github/tutecano1995/knex-cache?branch=docs/readme)
+
 ## Introduction
 
 knex-cache is a knex extension for caching SQL queries results.
