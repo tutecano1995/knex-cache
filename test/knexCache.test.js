@@ -9,6 +9,14 @@ describe('#knexCache', () => {
   let dbQueries;
   let knex;
 
+  const buildQuery = ({sql, bindings}) => {
+    let result = sql;
+    bindings.forEach((binding, i) => {
+      result = result.replace(`$${i+1}`, binding);
+    });
+    return result;
+  }
+
   beforeEach(() => {
     dbQueries = {};
 
@@ -23,7 +31,8 @@ describe('#knexCache', () => {
     tracker = knexMock.getTracker();
     tracker.install();
     tracker.on('query', (query) => {
-      dbQueries[query.sql] = (dbQueries[query.sql] || 0) + 1;
+      const queryKey = buildQuery(query);
+      dbQueries[queryKey] = (dbQueries[queryKey] || 0) + 1;
       query.response([
         {id: 0, username: 'tutecano1995', }
       ]);
@@ -56,7 +65,7 @@ describe('#knexCache', () => {
 
       it('should execute the parent query once', () => expect(dbQueries['select * from "users"']).be.equal(1));
 
-      it('should execute the child query once', () => expect(dbQueries['select * from "users" where "id" = $1']).be.equal(1));
+      it('should execute the child query once', () => expect(dbQueries['select * from "users" where "id" = 22']).be.equal(1));
     });
   });
 
@@ -68,7 +77,7 @@ describe('#knexCache', () => {
         await knexInstance.select().from('users').cache('users'); // Should execute the query after invalidation
       });
 
-      it('should execute the update', () => expect(dbQueries['update "users" set "username" = $1']).be.equal(1));
+      it('should execute the update', () => expect(dbQueries['update "users" set "username" = tutecano22']).be.equal(1));
 
       it('should execute the query after invalidation', () => expect(dbQueries['select * from "users"']).be.equal(2));
     });
@@ -83,11 +92,43 @@ describe('#knexCache', () => {
           await knexInstance.select().from('users').where({id: 22}).cache('users.22'); // Should execute the query after invalidation
         });
 
-        it('should execute the update', () => expect(dbQueries['update "users" set "username" = $1']).be.equal(1));
+        it('should execute the update', () => expect(dbQueries['update "users" set "username" = tutecano22']).be.equal(1));
 
         it('should execute the parent query twice', () => expect(dbQueries['select * from "users"']).be.equal(2));
 
-        it('should execute the child query twice', () => expect(dbQueries['select * from "users" where "id" = $1']).be.equal(2));
+        it('should execute the child query twice', () => expect(dbQueries['select * from "users" where "id" = 22']).be.equal(2));
+      });
+
+      describe('invalidating parent key with exact option', () => {
+        beforeEach(async () => {
+          await knexInstance.select().from('users').cache('users'); // Should execute the query
+          await knexInstance.select().from('users').where({id: 22}).cache('users.22'); // Should execute the query
+          await knexInstance('users').update({username: 'tutecano22'}).invalidate('users', {exact: true});
+          await knexInstance.select().from('users').cache('users'); // Should execute the query after invalidation
+          await knexInstance.select().from('users').where({id: 22}).cache('users.22'); // Should not execute the query and use cache
+        });
+
+        it('should execute the update', () => expect(dbQueries['update "users" set "username" = tutecano22']).be.equal(1));
+
+        it('should execute the parent query twice', () => expect(dbQueries['select * from "users"']).be.equal(2));
+
+        it('should execute the child query once', () => expect(dbQueries['select * from "users" where "id" = 22']).be.equal(1));
+      });
+
+      describe('invalidating multiple keys', () => {
+        beforeEach(async () => {
+          await knexInstance.select().from('users').where({id: 22}).cache('users.22'); // Should execute the query
+          await knexInstance.select().from('users').where({id: 15}).cache('users.15'); // Should execute the query
+          await knexInstance('users').update({username: 'tutecano22'}).invalidate('users.22').invalidate('users.15');
+          await knexInstance.select().from('users').where({id: 22}).cache('users.22'); // Should execute the query after invalidation
+          await knexInstance.select().from('users').where({id: 15}).cache('users.15'); // Should execute the query after invalidation
+        });
+
+        it('should execute the update', () => expect(dbQueries['update "users" set "username" = tutecano22']).be.equal(1));
+
+        it('should execute the child query twice', () => expect(dbQueries['select * from "users" where "id" = 22']).be.equal(2));
+
+        it('should execute the child query twice', () => expect(dbQueries['select * from "users" where "id" = 15']).be.equal(2));
       });
 
       describe('invalidating child key', () => {
@@ -99,11 +140,11 @@ describe('#knexCache', () => {
           await knexInstance.select().from('users').where({id: 22}).cache('users.22'); // Should execute the query after invalidation
         });
 
-        it('should execute the update', () => expect(dbQueries['update "users" set "username" = $1 where "id" = $2']).be.equal(1));
+        it('should execute the update', () => expect(dbQueries['update "users" set "username" = tutecano22 where "id" = 22']).be.equal(1));
 
         it('should execute the parent query once', () => expect(dbQueries['select * from "users"']).be.equal(1));
 
-        it('should execute the child query twice', () => expect(dbQueries['select * from "users" where "id" = $1']).be.equal(2));
+        it('should execute the child query twice', () => expect(dbQueries['select * from "users" where "id" = 22']).be.equal(2));
       });
     });
   });
