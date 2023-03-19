@@ -1,10 +1,10 @@
 {
   "name": "@tutecano1995/knex-cache",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "./lib/knexCache.js",
   "scripts": {
-    "test": "nyc --reporter=lcov --reporter=text mocha ./test/**.test.js"
+    "test": "nyc --reporter=lcov --reporter=text mocha --config=.mocharc.json"
   },
   "author": "",
   "license": "ISC",
@@ -20,6 +20,8 @@
     "mocha": "^10.2.0",
     "mock-knex": "^0.4.12",
     "nyc": "^15.1.0",
+    "sinon": "^15.0.2",
+    "sinon-chai": "^3.7.0",
     "typescript": "^4.9.5"
   }
 }

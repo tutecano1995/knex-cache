@@ -1,4 +1,4 @@
-const knexCache = require('../lib/knexCache');
+const knexCache = require('../../lib/knexCache');
 const knexMock = require('mock-knex');
 const { expect } = require('chai');
 const decache = require('decache');
