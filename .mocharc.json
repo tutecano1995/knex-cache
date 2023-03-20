@@ -1,0 +1,5 @@
+{
+  "package": "./package.json",
+  "watch-files": ["test/*.js", "test/**/*.js"],
+  "recursive": true
+}
